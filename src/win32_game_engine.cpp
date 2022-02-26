@@ -343,18 +343,18 @@ Win32GetEXEFileName(char** EXEFileNameResult, char** OnePastSlashResult)
 }
 
 internal void
-CatStrings(u32 SizeSourceA, char* SourceA, 
-           u32 SizeSourceB, char* SourceB, 
+CatStrings(size_t SizeSourceA, char* SourceA, 
+           size_t SizeSourceB, char* SourceB, 
            char* Result)
 {
-    for(u32 IndexA = 0;
+    for(s32 IndexA = 0;
         IndexA < SizeSourceA;
         ++IndexA)
     {
         *Result++ = SourceA[IndexA];
     }
 
-    for(u32 IndexB = 0;
+    for(s32 IndexB = 0;
         IndexB < SizeSourceB;
         ++IndexB)
     {
@@ -466,6 +466,7 @@ WinMain(HINSTANCE Instance,
             ShowWindow(WindowHandle, ShowCode);
             while(IsRunning)
             {
+                NewInput->DeltaTimeForFrame = TargetSecondsPerFrame;
                 FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
                 if(CompareFileTime(&GameCode.LastCodeWrite, &NewDLLWriteTime))
                 {

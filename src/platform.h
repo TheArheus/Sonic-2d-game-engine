@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <vadefs.h>
 
 #define internal static
 #define global_variable static
@@ -16,6 +17,11 @@ typedef int64_t s64;
 
 typedef float  r32;
 typedef double r64;
+
+typedef size_t memory_index;
+
+typedef uintptr_t uptr;
+typedef  intptr_t sptr;
 
 typedef s32 b32;
 typedef s64 b64;
@@ -83,6 +89,8 @@ struct game_input
 {
     game_button_state MouseButtons[5];
     s32 MouseX, MouseY;
+
+    r32 DeltaTimeForFrame;
 
     game_controller_input Controllers[5];
 };
