@@ -29,6 +29,11 @@ DrawRectangle(game_render_buffer* RenderBuffer, v2 Start, v2 End, u32 Color)
 
     if(StartRenderX < 0) StartRenderX = 0;
     if(StartRenderY < 0) StartRenderY = 0;
+    if(EndRenderX < 0) EndRenderX = 0;
+    if(EndRenderY < 0) EndRenderY = 0;
+
+    if(StartRenderX > RenderBuffer->Width)  StartRenderX = RenderBuffer->Width;
+    if(StartRenderY > RenderBuffer->Height) StartRenderY = RenderBuffer->Height;
     if(EndRenderX > RenderBuffer->Width)  EndRenderX = RenderBuffer->Width;
     if(EndRenderY > RenderBuffer->Height) EndRenderY = RenderBuffer->Height;
 
@@ -50,6 +55,27 @@ DrawRectangle(game_render_buffer* RenderBuffer, v2 Start, v2 End, u32 Color)
     }
 }
 
+internal void
+InitializeTileMap(memory_block* Block, tile_map* TileMap, s32 SizeX, s32 SizeY)
+{
+    TileMap->TileWidth  = SizeX;
+    TileMap->TileHeight = SizeY;
+    TileMap->Tiles = PushArray(Block, u8, SizeX * SizeY);
+}
+
+internal u8
+GetTileValue(tile_map* TileMap, u32 TileX, u32 TileY)
+{
+    u8 Result = TileMap->Tiles[TileY * TileMap->TileWidth + TileX];
+    return Result;
+}
+
+internal void
+SetTileValue(tile_map* TileMap, u32 TileX, u32 TileY, u8 Value)
+{
+    TileMap->Tiles[TileY * TileMap->TileWidth + TileX] = Value;
+}
+
 #if defined(__cplusplus)
 extern "C" 
 #endif
@@ -68,6 +94,42 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
         GameState->DeltaTime = Input->DeltaTimeForFrame;
 
         GameState->Player.P = V2(RenderBuffer->Width / 2.0f, RenderBuffer->Height / 2.0f);
+
+        InitializeTileMap(&GameState->World, &GameState->TestTileMap, 
+                          RenderBuffer->Width / PixelsInMeter + 1, RenderBuffer->Height / PixelsInMeter);
+
+        for(u32 TileY = 0;
+            TileY < GameState->TestTileMap.TileHeight;
+            ++TileY)
+        {
+            for(u32 TileX = 0;
+                TileX < GameState->TestTileMap.TileWidth;
+                ++TileX)
+            {
+                if((TileY % 2) == 0)
+                {
+                    if((TileX % 2) == 0)
+                    {
+                        SetTileValue(&GameState->TestTileMap, TileX, TileY, 1);
+                    }
+                    else
+                    {
+                        SetTileValue(&GameState->TestTileMap, TileX, TileY, 2);
+                    }
+                }
+                else
+                {
+                    if((TileX % 2) == 0)
+                    {
+                        SetTileValue(&GameState->TestTileMap, TileX, TileY, 2);
+                    }
+                    else
+                    {
+                        SetTileValue(&GameState->TestTileMap, TileX, TileY, 1);
+                    }
+                }
+            }
+        }
     }
 
     ClearColorBuffer(RenderBuffer, 0xFF000000);
@@ -102,6 +164,31 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
                     GameState->Player.ddP.x +=  1.0f;
                 }
             }
+        }
+    }
+
+    for (u32 TileY = 0;
+        TileY < GameState->TestTileMap.TileHeight;
+        ++TileY)
+    {
+        for (u32 TileX = 0;
+            TileX < GameState->TestTileMap.TileWidth;
+            ++TileX)
+        {
+            v2 Start = V2(TileX * PixelsInMeter, TileY * PixelsInMeter);
+            v2 End = Start + PixelsInMeter;
+
+            u32 Color = 0xFF000000;
+            u8 ID = GameState->TestTileMap.Tiles[TileY * GameState->TestTileMap.TileWidth + TileX];
+            if(ID == 1)
+            {
+                Color = 0xFFFF00FF;
+            }
+            else if(ID == 2)
+            {
+                Color = 0xFF00FF00;
+            }
+            DrawRectangle(RenderBuffer, Start, End, Color);
         }
     }
 

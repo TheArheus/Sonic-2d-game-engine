@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <vadefs.h>
 
 #define internal static
 #define global_variable static

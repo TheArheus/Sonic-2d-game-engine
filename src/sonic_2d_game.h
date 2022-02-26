@@ -37,6 +37,13 @@ PushSize_(memory_block* Block, memory_index Size)
     return Result;
 }
 
+struct tile_map
+{
+    s32 TileWidth;
+    s32 TileHeight;
+    u8* Tiles;
+};
+
 struct player
 {
     v2 P;
@@ -47,6 +54,8 @@ struct player
 struct game_state
 {
     memory_block World;
+
+    tile_map TestTileMap;
 
     player Player;
 
