@@ -416,6 +416,7 @@ WinMain(HINSTANCE Instance,
     WindowClass.hInstance = Instance;
     WindowClass.lpszClassName = "Game Engine";
 
+    // win32_window_dimension MainWindowDimension = { 1224, 714 };
     win32_window_dimension MainWindowDimension = { 1240, 720 };
     Win32ResizeDIBSection(&GlobalBackBuffer, MainWindowDimension);
     Win32LoadXInput();

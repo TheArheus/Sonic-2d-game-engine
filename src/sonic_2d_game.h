@@ -17,7 +17,7 @@ AllocateMemoryBlock(memory_block* Block, u8* Base, memory_index Size)
     Block->Used = 0;
 }
 
-#define PushStruct(Block, Type) (Type*)PushSize_(Bock, sizeof(Type)); 
+#define PushStruct(Block, Type) (Type*)PushSize_(Block, sizeof(Type)); 
 #define PushArray(Block, Type, Ammount) (Type*)PushSize_(Block, sizeof(Type) * Ammount);
 #define PushSize(Block, Size) (Type*)PushSize_(Block, Size);
 internal void*
@@ -37,11 +37,31 @@ PushSize_(memory_block* Block, memory_index Size)
     return Result;
 }
 
+#define CHUNK_SIZE 4
+
 struct tile_map
 {
-    s32 TileWidth;
-    s32 TileHeight;
+    s32 TileMapWidth;
+    s32 TileMapHeight;
     u8* Tiles;
+};
+
+// NOTE: Store the ammount of entities for each chunk
+// and maybe store entities itself
+struct tile_chunk
+{
+    s32 PositionX;
+    s32 PositionY;
+
+    tile_map* TileMap;
+    tile_chunk* NextChunk;
+};
+
+struct chunk_system
+{
+    s32 TileChunkCount;
+    // TODO: Implement hashing with external chaining
+    tile_chunk TileChunks[1024];
 };
 
 struct player
@@ -55,7 +75,9 @@ struct game_state
 {
     memory_block World;
 
+    // NOTE: I will use this for a world/level system
     tile_map TestTileMap;
+    chunk_system TestChunkSystem;
 
     player Player;
 
