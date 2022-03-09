@@ -41,27 +41,33 @@ PushSize_(memory_block* Block, memory_index Size)
 
 struct tile_map
 {
-    s32 TileMapWidth;
-    s32 TileMapHeight;
+    s32 TileMapSize;
+
     u8* Tiles;
+};
+
+struct world_position
+{
+    s32 ChunkX;
+    s32 ChunkY;
 };
 
 // NOTE: Store the ammount of entities for each chunk
 // and maybe store entities itself
 struct tile_chunk
 {
-    s32 PositionX;
-    s32 PositionY;
+    world_position Pos;
 
     tile_map* TileMap;
-    tile_chunk* NextChunk;
+    //tile_chunk* NextChunk;
 };
 
 struct chunk_system
 {
-    s32 TileChunkCount;
+    //s32 TileChunkCount;
+
     // TODO: Implement hashing with external chaining
-    tile_chunk TileChunks[1024];
+    tile_chunk TileChunks[1 << 12];
 };
 
 struct player
@@ -76,7 +82,6 @@ struct game_state
     memory_block World;
 
     // NOTE: I will use this for a world/level system
-    tile_map TestTileMap;
     chunk_system TestChunkSystem;
 
     player Player;
@@ -84,3 +89,4 @@ struct game_state
     r32 DeltaTime;
     r32 TotalTime;
 };
+

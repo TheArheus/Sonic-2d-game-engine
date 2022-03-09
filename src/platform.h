@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <limits.h>
 
 #define internal static
 #define global_variable static

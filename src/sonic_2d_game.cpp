@@ -58,22 +58,103 @@ DrawRectangle(game_render_buffer* RenderBuffer, v2 Start, v2 End, u32 Color)
 internal void
 InitializeTileMap(memory_block* Block, tile_map* TileMap, s32 SizeX, s32 SizeY)
 {
-    TileMap->TileMapWidth  = SizeX;
-    TileMap->TileMapHeight = SizeY;
+    TileMap->TileMapSize = SizeX;
+    TileMap->TileMapSize = SizeY;
     TileMap->Tiles = PushArray(Block, u8, SizeX * SizeY);
 }
 
 internal u8
 GetTileValue(tile_map* TileMap, u32 TileX, u32 TileY)
 {
-    u8 Result = TileMap->Tiles[TileY * TileMap->TileMapWidth + TileX];
+    u8 Result = TileMap->Tiles[TileY * TileMap->TileMapSize + TileX];
     return Result;
 }
 
 internal void
 SetTileValue(tile_map* TileMap, u32 TileX, u32 TileY, u8 Value)
 {
-    TileMap->Tiles[TileY * TileMap->TileMapWidth + TileX] = Value;
+    TileMap->Tiles[TileY * TileMap->TileMapSize + TileX] = Value;
+}
+
+#define CHUNK_UNINITIALIZED INT_MAX
+
+internal void
+InitializeChunkSystem(chunk_system* Chunks, memory_block* Block)
+{
+    for(u32 ChunkIndex = 0;
+        ChunkIndex < ArraySize(Chunks->TileChunks);
+        ++ChunkIndex)
+    {
+        tile_chunk* Chunk = Chunks->TileChunks + ChunkIndex;
+        Chunk->TileMap = PushStruct(Block, tile_map);
+        Chunk->TileMap->TileMapSize = CHUNK_SIZE;
+        Chunk->TileMap->Tiles = PushArray(Block, u8, CHUNK_SIZE * CHUNK_SIZE);
+        Chunk->Pos.ChunkX = CHUNK_UNINITIALIZED;
+    }
+}
+
+internal void
+MapIntoChunkSpace(chunk_system* Chunks, r32 RelX, r32 RelY, u32* ChunkX, u32* ChunkY)
+{
+    Assert(RelX >= 0);
+    Assert(RelY >= 0);
+    Assert(RelX < ArraySize(Chunks->TileChunks)*CHUNK_SIZE);
+    Assert(RelY < ArraySize(Chunks->TileChunks)*CHUNK_SIZE);
+
+    *ChunkX = RelX / ArraySize(Chunks->TileChunks);
+    *ChunkY = RelY / ArraySize(Chunks->TileChunks);
+}
+
+internal tile_chunk*
+GetChunk(chunk_system* Chunks, u32 ChunkX, u32 ChunkY)
+{
+    tile_chunk* Chunk = Chunks->TileChunks + (ChunkY*CHUNK_SIZE + ChunkX);
+    return Chunk;
+}
+
+internal void
+MoveChunk(chunk_system* Chunks, u32 SrcChunkX, u32 SrcChunkY, u32 DstChunkX, u32 DstChunkY)
+{
+    tile_chunk* SrcChunk = GetChunk(Chunks, SrcChunkX, SrcChunkY);
+    tile_chunk* DstChunk = GetChunk(Chunks, DstChunkX, DstChunkY);
+    DstChunk = SrcChunk;
+}
+
+internal void
+FillTestTileMap(tile_map* TileMap)
+{
+    for(u32 TileY = 0;
+        TileY < TileMap->TileMapSize;
+        ++TileY)
+    {
+        for(u32 TileX = 0;
+            TileX < TileMap->TileMapSize;
+            ++TileX)
+        {
+            if((TileY % 2) == 0)
+            {
+                if((TileX % 2) == 0)
+                {
+                    SetTileValue(TileMap, TileX, TileY, 1);
+                }
+                else
+                {
+                    SetTileValue(TileMap, TileX, TileY, 2);
+                }
+            }
+            else
+            {
+                if((TileX % 2) == 0)
+                {
+                    SetTileValue(TileMap, TileX, TileY, 2);
+                }
+                else
+                {
+                    SetTileValue(TileMap, TileX, TileY, 1);
+                }
+            }
+        }
+    }
 }
 
 #if defined(__cplusplus)
@@ -95,40 +176,20 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
 
         GameState->Player.P = V2(RenderBuffer->Width / 2.0f, RenderBuffer->Height / 2.0f);
 
-        GameState->TestChunkSystem.TileChunks[0].TileMap = PushStruct(&GameState->World, tile_map);
-        InitializeTileMap(&GameState->World, GameState->TestChunkSystem.TileChunks[0].TileMap, CHUNK_SIZE, CHUNK_SIZE);
-        GameState->TestChunkSystem.TileChunkCount += 1;
+        InitializeChunkSystem(&GameState->TestChunkSystem, &GameState->World);
 
-        for(u32 TileY = 0;
-            TileY < GameState->TestChunkSystem.TileChunks[0].TileMap->TileMapHeight;
-            ++TileY)
+        for(u32 ChunkY = 0;
+            ChunkY < 2;
+            ++ChunkY)
         {
-            for(u32 TileX = 0;
-                TileX < GameState->TestChunkSystem.TileChunks[0].TileMap->TileMapWidth;
-                ++TileX)
+            for(u32 ChunkX = 0;
+                ChunkX < 2;
+                ++ChunkX)
             {
-                if((TileY % 2) == 0)
-                {
-                    if((TileX % 2) == 0)
-                    {
-                        SetTileValue(GameState->TestChunkSystem.TileChunks[0].TileMap, TileX, TileY, 1);
-                    }
-                    else
-                    {
-                        SetTileValue(GameState->TestChunkSystem.TileChunks[0].TileMap, TileX, TileY, 2);
-                    }
-                }
-                else
-                {
-                    if((TileX % 2) == 0)
-                    {
-                        SetTileValue(GameState->TestChunkSystem.TileChunks[0].TileMap, TileX, TileY, 2);
-                    }
-                    else
-                    {
-                        SetTileValue(GameState->TestChunkSystem.TileChunks[0].TileMap, TileX, TileY, 1);
-                    }
-                }
+                tile_chunk* Chunk = GetChunk(&GameState->TestChunkSystem, ChunkX, ChunkY);
+                Chunk->Pos.ChunkX = ChunkX;
+                Chunk->Pos.ChunkY = ChunkY;
+                FillTestTileMap(Chunk->TileMap);
             }
         }
     }
@@ -171,35 +232,38 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
 
     // NOTE: Testing Chunking System
     for(u32 ChunkIndex = 0;
-        ChunkIndex < GameState->TestChunkSystem.TileChunkCount;
+        ChunkIndex < ArraySize(GameState->TestChunkSystem.TileChunks);
         ++ChunkIndex)
     {
         // NOTE: Get chunks for their x + y position hash value
         // NOTE: Maybe this is not the most efficient way to implement chunking system
         tile_chunk* Chunk = GameState->TestChunkSystem.TileChunks + ChunkIndex;
 
-        for (u32 TileY = 0;
-            TileY < Chunk->TileMap->TileMapHeight;
-            ++TileY)
+        if(Chunk->Pos.ChunkX != CHUNK_UNINITIALIZED)
         {
-            for (u32 TileX = 0;
-                TileX < Chunk->TileMap->TileMapWidth;
-                ++TileX)
+            for (u32 TileY = 0;
+                TileY < Chunk->TileMap->TileMapSize;
+                ++TileY)
             {
-                v2 Start = V2(TileX * PixelsInMeter, TileY * PixelsInMeter);
-                v2 End = Start + PixelsInMeter;
+                for (u32 TileX = 0;
+                    TileX < Chunk->TileMap->TileMapSize;
+                    ++TileX)
+                {
+                    v2 Start = V2(TileX * PixelsInMeter + Chunk->Pos.ChunkX * CHUNK_SIZE * PixelsInMeter, TileY * PixelsInMeter + Chunk->Pos.ChunkY * CHUNK_SIZE * PixelsInMeter);
+                    v2 End = Start + PixelsInMeter;
 
-                u32 Color = 0xFF000000;
-                u8 ID = GetTileValue(Chunk->TileMap, TileX, TileY);
-                if(ID == 1)
-                {
-                    Color = 0xFFFF00FF;
+                    u32 Color = 0xFF000000;
+                    u8 ID = GetTileValue(Chunk->TileMap, TileX, TileY);
+                    if(ID == 1)
+                    {
+                        Color = 0xFFFF00FF;
+                    }
+                    else if(ID == 2)
+                    {
+                        Color = 0xFF00FF00;
+                    }
+                    DrawRectangle(RenderBuffer, Start, End, Color);
                 }
-                else if(ID == 2)
-                {
-                    Color = 0xFF00FF00;
-                }
-                DrawRectangle(RenderBuffer, Start, End, Color);
             }
         }
     }
