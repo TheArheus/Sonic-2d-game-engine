@@ -37,38 +37,7 @@ PushSize_(memory_block* Block, memory_index Size)
     return Result;
 }
 
-#define CHUNK_SIZE 4
-
-struct tile_map
-{
-    s32 TileMapSize;
-
-    u8* Tiles;
-};
-
-struct world_position
-{
-    s32 ChunkX;
-    s32 ChunkY;
-};
-
-// NOTE: Store the ammount of entities for each chunk
-// and maybe store entities itself
-struct tile_chunk
-{
-    world_position Pos;
-
-    tile_map* TileMap;
-    //tile_chunk* NextChunk;
-};
-
-struct chunk_system
-{
-    //s32 TileChunkCount;
-
-    // TODO: Implement hashing with external chaining
-    tile_chunk TileChunks[1 << 12];
-};
+#include "world.h"
 
 struct player
 {

@@ -1,4 +1,5 @@
 #include "sonic_2d_game.h"
+#include "world.cpp"
 
 internal void
 ClearColorBuffer(game_render_buffer* RenderBuffer, u32 Color)
@@ -55,102 +56,65 @@ DrawRectangle(game_render_buffer* RenderBuffer, v2 Start, v2 End, u32 Color)
     }
 }
 
+// TODO: Create a function to load a levels from a custom file
+// For this thing I should create a custom file to do a thing
+// and this will be my assets and stored in transient store after
+// NOTE: After loading a level, it will be stored as a whole
+// array of values with a corresponding values for each row
+// I should think about how this values should be stored in the file
+// Maybe this function will load all levels, not just one
+// and then I would load then they will be in need
+// NOTE: This function right now in testing mode
 internal void
-InitializeTileMap(memory_block* Block, tile_map* TileMap, s32 SizeX, s32 SizeY)
+ChunkLevel(chunk_system* Chunks)
 {
-    TileMap->TileMapSize = SizeX;
-    TileMap->TileMapSize = SizeY;
-    TileMap->Tiles = PushArray(Block, u8, SizeX * SizeY);
-}
-
-internal u8
-GetTileValue(tile_map* TileMap, u32 TileX, u32 TileY)
-{
-    u8 Result = TileMap->Tiles[TileY * TileMap->TileMapSize + TileX];
-    return Result;
-}
-
-internal void
-SetTileValue(tile_map* TileMap, u32 TileX, u32 TileY, u8 Value)
-{
-    TileMap->Tiles[TileY * TileMap->TileMapSize + TileX] = Value;
-}
-
-#define CHUNK_UNINITIALIZED INT_MAX
-
-internal void
-InitializeChunkSystem(chunk_system* Chunks, memory_block* Block)
-{
-    for(u32 ChunkIndex = 0;
-        ChunkIndex < ArraySize(Chunks->TileChunks);
-        ++ChunkIndex)
+    // NOTE: Set up maximum level size
+    const int LevelWidth  = 16;
+    const int LevelHeight = 16;
+    
+    int TestLevel[LevelHeight][LevelWidth] = 
     {
-        tile_chunk* Chunk = Chunks->TileChunks + ChunkIndex;
-        Chunk->TileMap = PushStruct(Block, tile_map);
-        Chunk->TileMap->TileMapSize = CHUNK_SIZE;
-        Chunk->TileMap->Tiles = PushArray(Block, u8, CHUNK_SIZE * CHUNK_SIZE);
-        Chunk->Pos.ChunkX = CHUNK_UNINITIALIZED;
-    }
-}
+        {2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2},
+        {1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1},
+        {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1},
+        {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+    };
 
-internal void
-MapIntoChunkSpace(chunk_system* Chunks, r32 RelX, r32 RelY, u32* ChunkX, u32* ChunkY)
-{
-    Assert(RelX >= 0);
-    Assert(RelY >= 0);
-    Assert(RelX < ArraySize(Chunks->TileChunks)*CHUNK_SIZE);
-    Assert(RelY < ArraySize(Chunks->TileChunks)*CHUNK_SIZE);
-
-    *ChunkX = RelX / ArraySize(Chunks->TileChunks);
-    *ChunkY = RelY / ArraySize(Chunks->TileChunks);
-}
-
-internal tile_chunk*
-GetChunk(chunk_system* Chunks, u32 ChunkX, u32 ChunkY)
-{
-    tile_chunk* Chunk = Chunks->TileChunks + (ChunkY*CHUNK_SIZE + ChunkX);
-    return Chunk;
-}
-
-internal void
-MoveChunk(chunk_system* Chunks, u32 SrcChunkX, u32 SrcChunkY, u32 DstChunkX, u32 DstChunkY)
-{
-    tile_chunk* SrcChunk = GetChunk(Chunks, SrcChunkX, SrcChunkY);
-    tile_chunk* DstChunk = GetChunk(Chunks, DstChunkX, DstChunkY);
-    DstChunk = SrcChunk;
-}
-
-internal void
-FillTestTileMap(tile_map* TileMap)
-{
-    for(u32 TileY = 0;
-        TileY < TileMap->TileMapSize;
-        ++TileY)
+    // NOTE: This is way too unificient
+    // Think about better solution
+    for(u32 ChunkY = 0;
+        ChunkY < (LevelHeight / CHUNK_SIZE);
+        ++ChunkY)
     {
-        for(u32 TileX = 0;
-            TileX < TileMap->TileMapSize;
-            ++TileX)
+        for(u32 ChunkX = 0;
+            ChunkX < (LevelWidth / CHUNK_SIZE);
+            ++ChunkX)
         {
-            if((TileY % 2) == 0)
+            tile_chunk* NewLevelChunk = GetChunk(Chunks, ChunkX, ChunkY);
+
+            for(u32 TileY = 0;
+                TileY < CHUNK_SIZE;
+                ++TileY)
             {
-                if((TileX % 2) == 0)
+                for(u32 TileX = 0;
+                    TileX < CHUNK_SIZE;
+                    ++TileX)
                 {
-                    SetTileValue(TileMap, TileX, TileY, 1);
-                }
-                else
-                {
-                    SetTileValue(TileMap, TileX, TileY, 2);
-                }
-            }
-            else
-            {
-                if((TileX % 2) == 0)
-                {
-                    SetTileValue(TileMap, TileX, TileY, 2);
-                }
-                else
-                {
-                    SetTileValue(TileMap, TileX, TileY, 1);
+                    u32 GetTileY = TileY + (ChunkY * CHUNK_SIZE);
+                    u32 GetTileX = TileX + (ChunkX * CHUNK_SIZE);
+                    NewLevelChunk->TileMap->Tiles[TileY * CHUNK_SIZE + TileX] = TestLevel[GetTileY][GetTileX];
                 }
             }
         }
@@ -165,6 +129,7 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
     game_state* GameState = (game_state*)GameMemory->PermamentStorage;
 
     r32 PixelsInMeter = 128.0f; // NOTE: I want to use this as Tile Size
+    r32 MaxSpeed = PixelsInMeter * 12;
 
     AllocateMemoryBlock(&GameState->World, (u8*)GameMemory->PermamentStorage + sizeof(game_state), GameMemory->PermamentStorageSize - sizeof(game_state));
 
@@ -178,20 +143,9 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
 
         InitializeChunkSystem(&GameState->TestChunkSystem, &GameState->World);
 
-        for(u32 ChunkY = 0;
-            ChunkY < 2;
-            ++ChunkY)
-        {
-            for(u32 ChunkX = 0;
-                ChunkX < 2;
-                ++ChunkX)
-            {
-                tile_chunk* Chunk = GetChunk(&GameState->TestChunkSystem, ChunkX, ChunkY);
-                Chunk->Pos.ChunkX = ChunkX;
-                Chunk->Pos.ChunkY = ChunkY;
-                FillTestTileMap(Chunk->TileMap);
-            }
-        }
+        // NOTE: Should I chunk every level after loading them into memory
+        // or should chunk the levels only on demand?
+        ChunkLevel(&GameState->TestChunkSystem);
     }
 
     ClearColorBuffer(RenderBuffer, 0xFF000000);
@@ -211,19 +165,19 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
             {
                 if(Controller->Up.EndedDown)
                 {
-                    GameState->Player.ddP.y +=  1.0f;
+                    GameState->Player.ddP.y +=  0.45f;
                 }
                 if(Controller->Down.EndedDown)
                 {
-                    GameState->Player.ddP.y += -1.0f;
+                    GameState->Player.ddP.y += -0.45f;
                 }
                 if(Controller->Left.EndedDown)
                 {
-                    GameState->Player.ddP.x += -1.0f;
+                    GameState->Player.ddP.x += -0.45f;
                 }
                 if(Controller->Right.EndedDown)
                 {
-                    GameState->Player.ddP.x +=  1.0f;
+                    GameState->Player.ddP.x +=  0.45f;
                 }
             }
         }
@@ -235,7 +189,6 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
         ChunkIndex < ArraySize(GameState->TestChunkSystem.TileChunks);
         ++ChunkIndex)
     {
-        // NOTE: Get chunks for their x + y position hash value
         // NOTE: Maybe this is not the most efficient way to implement chunking system
         tile_chunk* Chunk = GameState->TestChunkSystem.TileChunks + ChunkIndex;
 
@@ -253,7 +206,7 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
                     v2 End = Start + PixelsInMeter;
 
                     u32 Color = 0xFF000000;
-                    u8 ID = GetTileValue(Chunk->TileMap, TileX, TileY);
+                    u32 ID = GetTileValue(Chunk->TileMap, TileX, TileY);
                     if(ID == 1)
                     {
                         Color = 0xFFFF00FF;

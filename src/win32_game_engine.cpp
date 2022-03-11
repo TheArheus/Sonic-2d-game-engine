@@ -5,6 +5,23 @@
 
 #include "win32_game_engine.h"
 
+/*
+ * Plans on game:
+ *
+ * 1) Start working on physics and camera
+ * 2) Working on renderer
+ *    - SIMD
+ *    - Better tile rendering
+ *    - Sorting by z value
+ *    - Some optimizations
+ * 3) Start working on assets system
+ * 4) Sound system
+ * 5) GUI system
+ *    - Main menu GUI
+ *    - In-Game tile editor system
+ *    - Level editing system
+*/
+
 global_variable bool IsRunning;
 global_variable win32_draw_buffer GlobalBackBuffer;
 global_variable s64 GlobalPerfCountFrequency;
