@@ -46,6 +46,15 @@ InitializeChunkSystem(chunk_system* Chunks, memory_block* Block)
     }
 }
 
+internal v2
+ChunkPositionToWorldPosition(world_position Pos, r32 PixelsInMeter)
+{
+    v2 Result = {};
+    Result.x = Pos.ChunkX*CHUNK_SIZE*PixelsInMeter + Pos.OffsetX;
+    Result.y = Pos.ChunkY*CHUNK_SIZE*PixelsInMeter + Pos.OffsetY;
+    return Result;
+}
+
 internal void
 RecanonicalizeCoord(r32 RelCoord, r32 PixelsInMeter, s32* ChunkPos, r32* Offset)
 {
@@ -65,6 +74,29 @@ MapIntoChunkSpace(chunk_system* Chunks, r32 PixelsInMeter, r32 RelX, r32 RelY)
 
     RecanonicalizeCoord(RelX, PixelsInMeter, &Result.ChunkX, &Result.OffsetX);
     RecanonicalizeCoord(RelY, PixelsInMeter, &Result.ChunkY, &Result.OffsetY);
+
+    return Result;
+}
+
+internal world_position
+Substract(world_position* A, world_position* B, r32 PixelsInMeter)
+{
+    world_position Result = {};
+    
+    Result.ChunkX = A->ChunkX - B->ChunkX;
+    Result.ChunkY = A->ChunkY - B->ChunkY;
+    Result.OffsetX = (A->OffsetX - B->OffsetX);
+    Result.OffsetY = (A->OffsetY - B->OffsetY);
+    if(Result.OffsetX < 0)
+    {
+        Result.ChunkX -=  1;
+        Result.OffsetX = CHUNK_SIZE*PixelsInMeter + Result.OffsetX;
+    }
+    if(Result.OffsetY < 0)
+    {
+        Result.ChunkY -=  1;
+        Result.OffsetY = CHUNK_SIZE*PixelsInMeter + Result.OffsetY;
+    }
 
     return Result;
 }

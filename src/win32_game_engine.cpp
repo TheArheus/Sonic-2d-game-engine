@@ -138,7 +138,7 @@ Win32ResizeDIBSection(win32_draw_buffer* BackBuffer, win32_window_dimension Wind
 
     BackBuffer->BitmapInfo.bmiHeader.biSize        = sizeof(BITMAPINFO);
     BackBuffer->BitmapInfo.bmiHeader.biWidth       = WindowDimensions.Width;
-    BackBuffer->BitmapInfo.bmiHeader.biHeight      = -WindowDimensions.Height;
+    BackBuffer->BitmapInfo.bmiHeader.biHeight      = WindowDimensions.Height;
     BackBuffer->BitmapInfo.bmiHeader.biPlanes      = 1;
     BackBuffer->BitmapInfo.bmiHeader.biBitCount    = 32;
     BackBuffer->BitmapInfo.bmiHeader.biCompression = BI_RGB;

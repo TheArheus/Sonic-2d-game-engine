@@ -5,12 +5,12 @@ internal void
 ClearColorBuffer(game_render_buffer* RenderBuffer, u32 Color)
 {
     u8* Row = (u8*)RenderBuffer->Memory;
-    for(u32 Y = 0;
+    for(s32 Y = 0;
         Y < RenderBuffer->Height;
         ++Y)
     {
         u32* Pixel = (u32*)Row;
-        for(u32 X = 0;
+        for(s32 X = 0;
             X < RenderBuffer->Width;
             ++X)
         {
@@ -30,23 +30,18 @@ DrawRectangle(game_render_buffer* RenderBuffer, v2 Start, v2 End, u32 Color)
 
     if(StartRenderX < 0) StartRenderX = 0;
     if(StartRenderY < 0) StartRenderY = 0;
-    if(EndRenderX < 0) EndRenderX = 0;
-    if(EndRenderY < 0) EndRenderY = 0;
-
-    if(StartRenderX > RenderBuffer->Width)  StartRenderX = RenderBuffer->Width;
-    if(StartRenderY > RenderBuffer->Height) StartRenderY = RenderBuffer->Height;
     if(EndRenderX > RenderBuffer->Width)  EndRenderX = RenderBuffer->Width;
     if(EndRenderY > RenderBuffer->Height) EndRenderY = RenderBuffer->Height;
 
     u8* Row = ((u8*)RenderBuffer->Memory + 
                RenderBuffer->Pitch * StartRenderY + 
                sizeof(u32) * StartRenderX);
-    for(u32 Y = StartRenderY;
+    for(s32 Y = StartRenderY;
         Y < EndRenderY;
         ++Y)
     {
         u32* Pixel = (u32*)Row;
-        for(u32 X = StartRenderX;
+        for(s32 X = StartRenderX;
             X < EndRenderX;
             ++X)
         {
@@ -72,47 +67,48 @@ ChunkLevel(chunk_system* Chunks)
     const int LevelWidth  = 16;
     const int LevelHeight = 16;
     
+    // NOTE: This level is upside
     int TestLevel[LevelHeight][LevelWidth] = 
     {
         {2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2},
         {1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
         {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+        {2, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2},
         {1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1},
+        {2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2},
         {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1},
-        {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1},
+        {2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2},
         {1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1},
+        {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 2},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1},
+        {2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 2},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1},
-        {2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+        {2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2},
     };
 
-    // NOTE: This is way too unificient
+    // NOTE: This is way too unificient. Maybe?
     // Think about better solution
-    for(u32 ChunkY = 0;
+    for(s32 ChunkY = 0;
         ChunkY < (LevelHeight / CHUNK_SIZE);
         ++ChunkY)
     {
-        for(u32 ChunkX = 0;
+        for(s32 ChunkX = 0;
             ChunkX < (LevelWidth / CHUNK_SIZE);
             ++ChunkX)
         {
             tile_chunk* NewLevelChunk = GetChunk(Chunks, ChunkX, ChunkY);
 
-            for(u32 TileY = 0;
+            for(s32 TileY = 0;
                 TileY < CHUNK_SIZE;
                 ++TileY)
             {
-                for(u32 TileX = 0;
+                for(s32 TileX = 0;
                     TileX < CHUNK_SIZE;
                     ++TileX)
                 {
-                    u32 GetTileY = TileY + (ChunkY * CHUNK_SIZE);
+                    u32 GetTileY = ((LevelHeight / CHUNK_SIZE) - 1 - TileY) + ((CHUNK_SIZE - 1 - ChunkY) * CHUNK_SIZE);
                     u32 GetTileX = TileX + (ChunkX * CHUNK_SIZE);
                     NewLevelChunk->TileMap->Tiles[TileY * CHUNK_SIZE + TileX] = TestLevel[GetTileY][GetTileX];
                 }
@@ -129,30 +125,29 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
     game_state* GameState = (game_state*)GameMemory->PermamentStorage;
 
     r32 PixelsInMeter = 128.0f; // NOTE: I want to use this as Tile Size
+    //r32 PixelsInMeter = 8.0f;
     r32 MaxSpeed = PixelsInMeter * 12;
 
     AllocateMemoryBlock(&GameState->World, (u8*)GameMemory->PermamentStorage + sizeof(game_state), GameMemory->PermamentStorageSize - sizeof(game_state));
 
-    world_position PlayerWorldPos;
+    world_position PlayerWorldPos = {};
     PlayerWorldPos.ChunkX = 0;
     PlayerWorldPos.ChunkY = 0;
+    PlayerWorldPos.OffsetX = 250;
+    PlayerWorldPos.OffsetY = 128 + PixelsInMeter/2;
 
-    world_position CameraWorldPos;
-    CameraWorldPos.ChunkX = 0;
-    CameraWorldPos.ChunkY = 0;
+    world_position CameraWorldPos = {};
 
     if(!GameMemory->IsInitialized)
     {
         GameMemory->IsInitialized = true;
-
         GameState->DeltaTime = Input->DeltaTimeForFrame;
 
-        GameState->Player.P = V2(RenderBuffer->Width / 2.0f, RenderBuffer->Height / 2.0f);
-        GameState->Camera;
+        //GameState->Player.P = V2(RenderBuffer->Width / 2.0f, RenderBuffer->Height / 2.0f);
+        //PlayerWorldPos = MapIntoChunkSpace(&GameState->TestChunkSystem, PixelsInMeter, GameState->Player.P.x, GameState->Player.P.y);
 
+        GameState->Player.P = ChunkPositionToWorldPosition(PlayerWorldPos, PixelsInMeter);
         InitializeChunkSystem(&GameState->TestChunkSystem, &GameState->World);
-
-        PlayerWorldPos = MapIntoChunkSpace(&GameState->TestChunkSystem, PixelsInMeter, GameState->Player.P.x, GameState->Player.P.y);
 
         // NOTE: Should I chunk every level after loading them into memory
         // or should chunk the levels only on demand?
@@ -177,24 +172,25 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
             {
                 if(Controller->Up.EndedDown)
                 {
-                    GameState->Player.ddP.y =  1.0f;
+                    GameState->Player.ddP.y +=  1.0f;
                 }
                 if(Controller->Down.EndedDown)
                 {
-                    GameState->Player.ddP.y = -1.0f;
+                    GameState->Player.ddP.y += -1.0f;
                 }
                 if(Controller->Left.EndedDown)
                 {
-                    GameState->Player.ddP.x = -1.0f;
+                    GameState->Player.ddP.x += -1.0f;
                 }
                 if(Controller->Right.EndedDown)
                 {
-                    GameState->Player.ddP.x =  1.0f;
+                    GameState->Player.ddP.x +=  1.0f;
                 }
             }
         }
     }
 
+    GameState->Camera.P = GameState->Player.P;
 
     // NOTE: Testing Chunking System
     for(u32 ChunkIndex = 0;
@@ -214,7 +210,8 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
                     TileX < Chunk->TileMap->TileMapSize;
                     ++TileX)
                 {
-                    v2 Start = V2(TileX * PixelsInMeter + Chunk->Pos.ChunkX * CHUNK_SIZE * PixelsInMeter, TileY * PixelsInMeter + Chunk->Pos.ChunkY * CHUNK_SIZE * PixelsInMeter);
+                    v2 Start = V2(TileX * PixelsInMeter + Chunk->Pos.ChunkX * CHUNK_SIZE * PixelsInMeter, 
+                                  TileY * PixelsInMeter + Chunk->Pos.ChunkY * CHUNK_SIZE * PixelsInMeter) - GameState->Camera.P;
                     v2 End = Start + PixelsInMeter;
 
                     u32 Color = 0xFF000000;
@@ -235,17 +232,13 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
 
     GameState->Player.ddP *= 1000.0f;
 
-#if 0
-    GameState->Player.dP += GameState->Player.ddP * GameState->DeltaTime;
-    GameState->Player.P  += GameState->Player.dP  * GameState->DeltaTime * PixelsInMeter;
-#else
     GameState->Player.P   = 0.5f*Square(GameState->DeltaTime) * GameState->Player.ddP
-                          + GameState->Player.dP * GameState->DeltaTime 
+                          + GameState->Player.dP * GameState->DeltaTime
                           + GameState->Player.P;
     GameState->Player.dP  = GameState->Player.ddP * GameState->DeltaTime + GameState->Player.dP;
-#endif
 
-    v2 RenderStart = GameState->Player.P - PixelsInMeter/2;
+    v2 RenderStart = V2(RenderBuffer->Width, RenderBuffer->Height)/2 + 
+                        GameState->Player.P - GameState->Camera.P - PixelsInMeter/2;
     v2 RenderEnd   = RenderStart + PixelsInMeter;
     DrawRectangle(RenderBuffer, RenderStart, RenderEnd, 0xFFFFFFFF);
 

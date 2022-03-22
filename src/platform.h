@@ -42,9 +42,9 @@ typedef s64 b64;
 struct game_render_buffer
 {
     void* Memory;
-    u32 Width;
-    u32 Height;
-    u32 Pitch;
+    s32 Width;
+    s32 Height;
+    s32 Pitch;
 };
 
 struct game_button_state
