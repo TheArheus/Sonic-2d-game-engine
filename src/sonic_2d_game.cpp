@@ -133,6 +133,14 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
 
     AllocateMemoryBlock(&GameState->World, (u8*)GameMemory->PermamentStorage + sizeof(game_state), GameMemory->PermamentStorageSize - sizeof(game_state));
 
+    world_position PlayerWorldPos;
+    PlayerWorldPos.ChunkX = 0;
+    PlayerWorldPos.ChunkY = 0;
+
+    world_position CameraWorldPos;
+    CameraWorldPos.ChunkX = 0;
+    CameraWorldPos.ChunkY = 0;
+
     if(!GameMemory->IsInitialized)
     {
         GameMemory->IsInitialized = true;
@@ -140,8 +148,11 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
         GameState->DeltaTime = Input->DeltaTimeForFrame;
 
         GameState->Player.P = V2(RenderBuffer->Width / 2.0f, RenderBuffer->Height / 2.0f);
+        GameState->Camera;
 
         InitializeChunkSystem(&GameState->TestChunkSystem, &GameState->World);
+
+        PlayerWorldPos = MapIntoChunkSpace(&GameState->TestChunkSystem, PixelsInMeter, GameState->Player.P.x, GameState->Player.P.y);
 
         // NOTE: Should I chunk every level after loading them into memory
         // or should chunk the levels only on demand?
@@ -157,6 +168,7 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
         game_controller_input* Controller = Input->Controllers + ControllerIndex;
         if(Controller->IsConnected)
         {
+            GameState->Player.ddP = {};
             if(Controller->IsAnalog)
             {
                 GameState->Player.ddP += V2(Controller->StickAvarageX, Controller->StickAvarageY);
@@ -165,19 +177,19 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
             {
                 if(Controller->Up.EndedDown)
                 {
-                    GameState->Player.ddP.y +=  0.45f;
+                    GameState->Player.ddP.y =  1.0f;
                 }
                 if(Controller->Down.EndedDown)
                 {
-                    GameState->Player.ddP.y += -0.45f;
+                    GameState->Player.ddP.y = -1.0f;
                 }
                 if(Controller->Left.EndedDown)
                 {
-                    GameState->Player.ddP.x += -0.45f;
+                    GameState->Player.ddP.x = -1.0f;
                 }
                 if(Controller->Right.EndedDown)
                 {
-                    GameState->Player.ddP.x +=  0.45f;
+                    GameState->Player.ddP.x =  1.0f;
                 }
             }
         }
@@ -221,8 +233,17 @@ GAME_MAIN_RENDER_AND_UPDATE_LOOP(GameMainRenderAndUpdateLoop)
         }
     }
 
+    GameState->Player.ddP *= 1000.0f;
+
+#if 0
     GameState->Player.dP += GameState->Player.ddP * GameState->DeltaTime;
     GameState->Player.P  += GameState->Player.dP  * GameState->DeltaTime * PixelsInMeter;
+#else
+    GameState->Player.P   = 0.5f*Square(GameState->DeltaTime) * GameState->Player.ddP
+                          + GameState->Player.dP * GameState->DeltaTime 
+                          + GameState->Player.P;
+    GameState->Player.dP  = GameState->Player.ddP * GameState->DeltaTime + GameState->Player.dP;
+#endif
 
     v2 RenderStart = GameState->Player.P - PixelsInMeter/2;
     v2 RenderEnd   = RenderStart + PixelsInMeter;

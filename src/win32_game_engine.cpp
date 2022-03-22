@@ -446,7 +446,7 @@ WinMain(HINSTANCE Instance,
         MonitorRefreshHz = DisplaySettings.dmDisplayFrequency;
     }
 
-    s32 GameUpdateHz = MonitorRefreshHz;
+    s32 GameUpdateHz = MonitorRefreshHz / 2;
     r32 TargetSecondsPerFrame = 1.0f / (r32)GameUpdateHz;
 
     if(RegisterClass(&WindowClass))

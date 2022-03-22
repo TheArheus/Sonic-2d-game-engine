@@ -1,4 +1,5 @@
 
+#define CHUNK_UNINITIALIZED INT_MAX
 
 internal void
 InitializeTileMap(memory_block* Block, tile_map* TileMap, s32 SizeX, s32 SizeY)
@@ -11,6 +12,9 @@ InitializeTileMap(memory_block* Block, tile_map* TileMap, s32 SizeX, s32 SizeY)
 internal u32
 GetTileValue(tile_map* TileMap, u32 TileX, u32 TileY)
 {
+    Assert(TileX < TileMap->TileMapSize);
+    Assert(TileY < TileMap->TileMapSize);
+
     u32 Result = TileMap->Tiles[TileY * TileMap->TileMapSize + TileX];
     return Result;
 }
@@ -18,14 +22,18 @@ GetTileValue(tile_map* TileMap, u32 TileX, u32 TileY)
 internal void
 SetTileValue(tile_map* TileMap, u32 TileX, u32 TileY, u8 Value)
 {
+    Assert(TileX < TileMap->TileMapSize);
+    Assert(TileY < TileMap->TileMapSize);
+
     TileMap->Tiles[TileY * TileMap->TileMapSize + TileX] = Value;
 }
-
-#define CHUNK_UNINITIALIZED INT_MAX
 
 internal void
 InitializeChunkSystem(chunk_system* Chunks, memory_block* Block)
 {
+    Chunks->MaxChunkX = SquareRoot(ArraySize(Chunks->TileChunks));
+    Chunks->MaxChunkY = Chunks->MaxChunkX;
+
     for(u32 ChunkIndex = 0;
         ChunkIndex < ArraySize(Chunks->TileChunks);
         ++ChunkIndex)
@@ -39,15 +47,26 @@ InitializeChunkSystem(chunk_system* Chunks, memory_block* Block)
 }
 
 internal void
-MapIntoChunkSpace(chunk_system* Chunks, r32 RelX, r32 RelY, u32* ChunkX, u32* ChunkY)
+RecanonicalizeCoord(r32 RelCoord, r32 PixelsInMeter, s32* ChunkPos, r32* Offset)
+{
+    *ChunkPos = RelCoord / (CHUNK_SIZE * PixelsInMeter);
+    *Offset = RelCoord - *ChunkPos * CHUNK_SIZE * PixelsInMeter;
+}
+
+internal world_position
+MapIntoChunkSpace(chunk_system* Chunks, r32 PixelsInMeter, r32 RelX, r32 RelY)
 {
     Assert(RelX >= 0);
     Assert(RelY >= 0);
-    Assert(RelX < ArraySize(Chunks->TileChunks)*CHUNK_SIZE);
-    Assert(RelY < ArraySize(Chunks->TileChunks)*CHUNK_SIZE);
+    Assert(RelX < Chunks->MaxChunkX*CHUNK_SIZE*PixelsInMeter);
+    Assert(RelY < Chunks->MaxChunkY*CHUNK_SIZE*PixelsInMeter);
 
-    *ChunkX = RelX / ArraySize(Chunks->TileChunks);
-    *ChunkY = RelY / ArraySize(Chunks->TileChunks);
+    world_position Result = {};
+
+    RecanonicalizeCoord(RelX, PixelsInMeter, &Result.ChunkX, &Result.OffsetX);
+    RecanonicalizeCoord(RelY, PixelsInMeter, &Result.ChunkY, &Result.OffsetY);
+
+    return Result;
 }
 
 // NOTE: Get chunks for their x + y position hash value
@@ -55,6 +74,9 @@ MapIntoChunkSpace(chunk_system* Chunks, r32 RelX, r32 RelY, u32* ChunkX, u32* Ch
 internal tile_chunk*
 GetChunk(chunk_system* Chunks, u32 ChunkX, u32 ChunkY)
 {
+    Assert(ChunkX < Chunks->MaxChunkX);
+    Assert(ChunkY < Chunks->MaxChunkY);
+
     tile_chunk* Chunk = Chunks->TileChunks + (ChunkY*CHUNK_SIZE + ChunkX);
 
     Chunk->Pos.ChunkX = ChunkX;

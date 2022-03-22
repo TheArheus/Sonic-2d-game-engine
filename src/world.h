@@ -13,9 +13,10 @@ struct world_position
     s32 ChunkX;
     s32 ChunkY;
 
-    // NOTE: Offset for a chunk
+    // NOTE: Offset for a entity
     // will be used for a drawing a chunk tiles
-    s8 Offset;
+    r32 OffsetX;
+    r32 OffsetY;
 };
 
 // NOTE: Store the ammount of entities for each chunk
@@ -30,10 +31,11 @@ struct tile_chunk
 
 struct chunk_system
 {
-    //s32 TileChunkCount;
+    s32 MaxChunkX;
+    s32 MaxChunkY;
 
     // TODO: Implement hashing with external chaining
-    // NOTE: Maximum level width and height will be ((2 ^ N) / 2) chunks
-    // Chunk is 4 by 4
+    // Don't wan't this to be an internal chaining
+    // NOTE: Maximum level width and height will be sqrt(2 ^ N) chunks
     tile_chunk TileChunks[1 << 12];
 };

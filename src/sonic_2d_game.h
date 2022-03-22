@@ -37,9 +37,12 @@ PushSize_(memory_block* Block, memory_index Size)
     return Result;
 }
 
+#define Max(a, b) ((a > b) ? a : b)
+#define Min(a, b) ((a < b) ? a : b)
+
 #include "world.h"
 
-struct player
+struct pos
 {
     v2 P;
     v2 dP;
@@ -53,7 +56,9 @@ struct game_state
     // NOTE: I will use this for a world/level system
     chunk_system TestChunkSystem;
 
-    player Player;
+    pos Player;
+    pos Camera;
+
 
     r32 DeltaTime;
     r32 TotalTime;
